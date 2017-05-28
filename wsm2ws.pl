@@ -5,7 +5,6 @@ use strict;
 use feature qw(say);
 
 use File::Basename;
-use Scalar::Util qw(looks_like_number);
 use Text::ParseWords;
 
 main(@ARGV);
