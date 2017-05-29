@@ -59,7 +59,7 @@ The following keywords are available. In fact, any tokens that start with a list
 * `jmp`: Unconditionally jump to a label.<sup>2</sup> Note: `jump` is accepted as a synonym.
 * `jez`: Jump to a label if the top stack item is 0.<sup>2</sup> Note: `jz` is accepted as a synonym.
 * `jlz`: Jump to a label if the top stack item is negative.<sup>2</sup>
-* `ret`: Return to the location of the last `call` command. Note: Pattern matching for this command is actually `/^ret(?!r)/` so that `retrieve` unabiguously matches `retr`
+* `ret`: Return to the location of the last `call` command. Note: Pattern matching for this command is actually `/^ret(?!r)/` so that `retrieve` unambiguously matches `retr`
 * `end`: End the program. Note: `exit` is accepted as a synonym.
 
 ## I/O
