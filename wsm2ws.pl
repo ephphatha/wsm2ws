@@ -1,50 +1,54 @@
-#! /usr/bin/perl -w
+#! /usr/bin/env perl
 
 use strict;
+use warnings;
 
 use feature qw(say);
 
 use File::Basename;
 use Text::ParseWords;
+use Tie::RegexpHash;
 
 main(@ARGV);
 
 sub main {
-  my %ops = (
-    # Stack Manipulation
-    push => {op => 'ss', param => 'number'},
-    dup => 'sns',
-    copy => {op => 'sts', param => 'number'},
-    swap => 'snt',
-    pop => 'snn',
-    slide => {op => 'stn', param => 'number'},
+  my %ops;
+  
+  tie %ops, 'Tie::RegexpHash';
+  
+  # Stack Manipulation
+  $ops{qr/^push/i} = {op => 'ss', param => 'number'};
+  $ops{qr/^dup/i} = 'sns';
+  $ops{qr/^copy/i} = {op => 'sts', param => 'number'};
+  $ops{qr/^swap/i} = 'snt';
+  $ops{qr/^pop/i} = 'snn';
+  $ops{qr/^slide/i} = {op => 'stn', param => 'number'};
 
-    # Arithmetic
-    add => 'tsss',
-    sub => 'tsst',
-    mul => 'tssn',
-    div => 'tsts',
-    mod => 'tstt',
+  # Arithmetic
+  $ops{qr/^add/i} = 'tsss';
+  $ops{qr/^sub/i} = 'tsst';
+  $ops{qr/^mul/i} = 'tssn';
+  $ops{qr/^div/i} = 'tsts';
+  $ops{qr/^mod/i} = 'tstt';
 
-    # Heap Access
-    stor => 'tts',
-    retr => 'ttt',
+  # Heap Access
+  $ops{qr/^stor/i} = 'tts';
+  $ops{qr/^retr/i} = 'ttt';
 
-    # Flow Control
-    label => {op => "nss", param => 'label'},
-    call => {op => "nst", param => 'label'},
-    jmp => {op => "nsn", param => 'label'},
-    jez => {op => 'nts', param => 'label'},
-    jlz => {op => 'ntt', param => 'label'},
-    ret => 'ntn',
-    end => 'nnn',
+  # Flow Control
+  $ops{qr/^label/i} = {op => "nss", param => 'label'};
+  $ops{qr/^call/i} = {op => "nst", param => 'label'};
+  $ops{qr/^ju?mp/i} = {op => "nsn", param => 'label'};
+  $ops{qr/^je?z/i} = {op => 'nts', param => 'label'};
+  $ops{qr/^jlz/i} = {op => 'ntt', param => 'label'};
+  $ops{qr/^ret(?!r)/i} = 'ntn';
+  $ops{qr/^e(nd|xit)/i} = 'nnn';
 
-    # I/O
-    ochar => 'tnss',
-    onum => 'tnst',
-    ichar => 'tnts',
-    inum => 'tntt',
-  );
+  # I/O
+  $ops{qr/^(o|put)char/i} = 'tnss';
+  $ops{qr/^(o|put)num/i} = 'tnst';
+  $ops{qr/^(i|get)char/ni} = 'tnts';
+  $ops{qr/^(i|get)num/ni} = 'tntt';
 
   my $filename = shift or die "Usage $0 <filename>";
 
