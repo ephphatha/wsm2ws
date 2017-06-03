@@ -33,15 +33,15 @@ sub main {
   $ops{qr/^slide/i} = { op => 'stn', param => 'number' };
 
   # Arithmetic
-  $ops{qr/^add/i} = { op => 'tsss' };
-  $ops{qr/^sub/i} = { op => 'tsst' };
-  $ops{qr/^mul/i} = { op => 'tssn' };
-  $ops{qr/^div/i} = { op => 'tsts' };
-  $ops{qr/^(mod|rem)/ni} = { op => 'tstt' };
+  $ops{qr/^add/i} = { op => 'tsss', param => 'number_optional' };
+  $ops{qr/^sub/i} = { op => 'tsst', param => 'number_optional' };
+  $ops{qr/^mul/i} = { op => 'tssn', param => 'number_optional' };
+  $ops{qr/^div/i} = { op => 'tsts', param => 'number_optional' };
+  $ops{qr/^(mod|rem)/ni} = { op => 'tstt', param => 'number_optional' };
 
   # Heap Access
-  $ops{qr/^stor/i} = { op => 'tts' };
-  $ops{qr/^retr/i} = { op => 'ttt' };
+  $ops{qr/^stor/i} = { op => 'tts', param => 'number_optional' };
+  $ops{qr/^retr/i} = { op => 'ttt', param => 'number_optional' };
 
   # Flow Control
   $ops{qr/^label/i} = { op => "nss", param => 'label' };
@@ -110,19 +110,26 @@ sub main {
           } while ($token->rule->name eq 'WHITESPACE');
 
           given ($param) {
-            when ('number') {
+            when (/^number/) {
               my $isNumberToken = NUMBER_TOKEN_NAMES->{$token->rule->name};
-
+              my $isOptional = $param =~ /optional$/;
+              if ($isOptional && $isNumberToken) {
+                warn "Shorthand instructions have not been implemented!";
+                push @instructions, \%instruction;
+                redo TOKEN;
+              }
               if ($isNumberToken) {
                 $instruction{op} .= whitespace_encode($token->data, signed => 1);
                 $instruction{token} .= " ".$token->data;
               } else {
-                $instruction{op} .= whitespace_encode('0', signed => 1);
-                $instruction{token} .= " 0";
+                unless ($isOptional) {
+                  $instruction{op} .= whitespace_encode('0', signed => 1);
+                  $instruction{token} .= " 0";
+                }
               }
 
               unless ($isNumberToken) {
-                warn "Expected a number but found: \"".$token->data."\"";
+                warn "Expected a number but found: \"".$token->data."\"" unless $isOptional;
                 push @instructions, \%instruction;
                 redo TOKEN;
               }
