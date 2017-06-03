@@ -70,8 +70,8 @@ sub main {
       { name => 'BINARY', re => qr/\b0b[01]+\b/ },
       { name => 'SIGNED_OCTAL', re => qr/\b[+-]0[0-7]+\b/ },
       { name => 'OCTAL', re => qr/\b0[0-7]+\b/ },
-      { name => 'SIGNED_HEX', re => qr/\b[+-]0x[\da-f]+\b/ },
-      { name => 'HEX', re => qr/\b0x[\da-f]+\b/ },
+      { name => 'SIGNED_HEX', re => qr/\b[+-]0x[\da-fA-F]+\b/ },
+      { name => 'HEX', re => qr/\b0x[\da-fA-F]+\b/ },
       { name => 'SIGNED_INTEGER', re => qr/\b[+-]\d+\b/ },
       { name => 'INTEGER', re => qr/\b\d+\b/ },
       { name => 'CHAR', re => qr/'\\?.'/ },
@@ -193,7 +193,7 @@ sub whitespace_encode {
 
   my $encodedString = (
     $token =~ /\G0b([01]+)$/ ? $1 : # binary
-    $token =~ /\G(0(?:[0-7]+|x[\da-f]+))$/ ? sprintf('%b', oct($1)) : # octal/hex
+    $token =~ /\G(0(?:[0-7]+|x[\da-fA-F]+))$/ ? sprintf('%b', oct($1)) : # octal/hex
     $token =~ /\G([1-9][\d]*)$/ ? sprintf('%b', $1) : # integer (non-zero)
     $token =~ /^'(\\.)'$/ ? sprintf('%b', ord(unescape($1))) : # escaped char
     $token =~ /^'(.)'$/ ? sprintf('%b', ord($1)) : # char
