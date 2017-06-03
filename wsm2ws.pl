@@ -113,15 +113,15 @@ sub main {
     say sprintf('%-5s', $instruction->{op})." ; $instruction->{token}";
   }
 
-  my $outfilename = join('', (fileparse($filename, '.wsm'))[1,0], '.ws');
+  my $outFilename = join('', (fileparse($filename, '.wsm'))[1,0], '.ws');
 
-  open(my $ofh, ">", $outfilename) or die "Unable to open output file $outfilename for writing: $!";
+  open(my $ofh, ">", $outFilename) or die "Unable to open output file $outFilename for writing: $!";
 
   print $ofh $ws =~ tr/stn//cdr =~ tr/stn/ \t\n/r;
 
-  close($ofh) or die "Error closing output file $outfilename: $!";
+  close($ofh) or die "Error closing output file $outFilename: $!";
 
-  say "See $outfilename for transpiled source";
+  say "See $outFilename for transpiled source";
 }
 
 sub encode_number {
