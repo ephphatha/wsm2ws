@@ -192,8 +192,9 @@ sub whitespace_encode {
   $sign = $token =~ /^[+-]/g =~ tr/+-/st/r || 's' if $options{signed};
 
   my $encodedString = (
-    $token =~ /\G(0(?:b[01]+|[0-7]+|x[\da-f]+))$/ ? sprintf('%b', oct($1)) : # binary/octal/hex string
-    $token =~ /\G([1-9][\d]*)$/ ? sprintf('%b', $1) : # number
+    $token =~ /\G0b([01]+)$/ ? $1 : # binary
+    $token =~ /\G(0(?:[0-7]+|x[\da-f]+))$/ ? sprintf('%b', oct($1)) : # octal/hex
+    $token =~ /\G([1-9][\d]*)$/ ? sprintf('%b', $1) : # integer (non-zero)
     $token =~ /^'(\\.)'$/ ? sprintf('%b', ord(unescape($1))) : # escaped char
     $token =~ /^'(.)'$/ ? sprintf('%b', ord($1)) : # char
     '' # special case for 0 (or unrecognised token)
