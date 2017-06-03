@@ -71,8 +71,8 @@ sub main {
       { name => 'BINARY', re => qr/0b[01]+(?!:)/ },
       { name => 'SIGNED_OCTAL', re => qr/[+-]0[0-7]+/ },
       { name => 'OCTAL', re => qr/0[0-7]+(?!:)/ },
-      { name => 'SIGNED_HEX', re => qr/[+-]0x[\da-fA-F]+/ },
-      { name => 'HEX', re => qr/0x[\da-fA-F]+(?!:)/ },
+      { name => 'SIGNED_HEX', re => qr/[+-]0x[\da-f]+/i },
+      { name => 'HEX', re => qr/0x[\da-f]+(?!:)/i },
       { name => 'SIGNED_INTEGER', re => qr/[+-]\d+/ },
       { name => 'INTEGER', re => qr/\d+(?!:)/ },
       { name => 'CHAR', re => qr/'\\?.'/ },
@@ -119,8 +119,7 @@ sub main {
 
               if ($isOptional && $isNumberToken) {
                 warn "Shorthand instructions have not been implemented!";
-                push @instructions, \%instruction;
-                redo TOKEN;
+                break;
               }
 
               if ($isNumberToken) {
@@ -162,7 +161,7 @@ sub main {
             }
             when ('self') {
               # Special case for label: syntax
-              if ($token->data =~ /(0[bx]?[\da-fA-F]+|\d+):/) {
+              if ($token->data =~ /(0[bx]?[\da-f]+|\d+):/i) {
                 $instruction{op} .= whitespace_encode($1);
               } elsif ($token->data =~ /(.):/) {
                 $instruction{op} .= whitespace_encode("'$1'");
@@ -208,8 +207,8 @@ sub whitespace_encode {
   $sign = $token =~ /^[+-]/g =~ tr/+-/st/r || 's' if $options{signed};
 
   my $encodedString = (
-    $token =~ /\G0b([01]+)$/ ? $1 : # binary
-    $token =~ /\G(0(?:[0-7]+|x[\da-fA-F]+))$/ ? sprintf('%b', oct($1)) : # octal/hex
+    $token =~ /\G0b([01]+)$/i ? $1 : # binary
+    $token =~ /\G(0(?:[0-7]+|x[\da-f]+))$/i ? sprintf('%b', oct($1)) : # octal/hex
     $token =~ /\G([1-9][\d]*)$/ ? sprintf('%b', $1) : # integer (non-zero)
     $token =~ /^'(\\.)'$/ ? sprintf('%b', ord(unescape($1))) : # escaped char
     $token =~ /^'(.)'$/ ? sprintf('%b', ord($1)) : # char

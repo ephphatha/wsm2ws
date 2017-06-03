@@ -91,24 +91,26 @@ Synonyms: `getnum`
 Numbers can be written in any of the following formats:
 
 * Integer (`[+-]?\d+`) - A sequence of digits.<sup>1</sup> <sup>2</sup>
-* Binary (`[+-]?0b[01]+`) - The string `0b` followed by a sequence of `0` and `1` characters.<sup>1</sup> <sup>3</sup>
+* Binary (`[+-]?0b[01]+`) - The string `0b` followed by a sequence of `0` and `1` characters.<sup>1</sup> <sup>3</sup> <sup>4</sup>
 * Octal (`[+-]?0[0-7]+`) - A `0` character followed by a sequence of digits between `0` and `7` (inclusive).<sup>1</sup>
-* Hex (`[+-]?0x[\da-fA-F]+`) - The string `0x` followed by a sequence of digits or the characters `a` to `f` (either upper or lower case).<sup>1</sup>
+* Hex (`[+-]?0x[\da-f]+`) - The string `0x` followed by a sequence of digits or the characters `a` to `f`.<sup>1</sup> <sup>4</sup>
 * Character literal (`'\?.'`) - A single quoted character or escape sequence. Character literals will be converted to the corresponding ascii character code value.
 
 ### Notes
 1. These formats can optionally be prefixed with a `+` or `-` character to specify the sign.
 2. To shorten output slightly the integer 0 has special case handling so it is encoded as an empty sequence instead of a single space character. To avoid this behaviour use the binary/octal/hex format 
 3. Leading `0` digits are significant when used with binary numbers.
+4. These formats are case insensitive.
 
 ## Labels
 While labels are not strictly numeric, for ease of representing labels in WSM syntax the following unsigned numerical formats are used:
 
 * Integer (`\d+`) - A sequence of digits.<sup>1</sup>
-* Binary (`0b[01]+`) - The string `0b` followed by a sequence of `0` and `1` characters.<sup>2</sup>
+* Binary (`0b[01]+`) - The string `0b` followed by a sequence of `0` and `1` characters.<sup>2</sup> <sup>3</sup>
 * Octal (`0[0-7]`) - A `0` character followed by a sequence of digits between `0` and `7` (inclusive).
-* Hex (`0x[\da-fA-F]`) - The string `0x` followed by a sequence of digits or the characters `a` to `f` (either upper or lower case).
+* Hex (`0x[\da-f]`) - The string `0x` followed by a sequence of digits or the characters `a` to `f`.<sup>3</sup>
 
 ### Notes
 1. To shorten output slightly the integer 0 has special case handling so it is encoded as an empty sequence instead of a single space character. To avoid this behaviour use the binary/octal/hex format 
 2. Leading `0` digits are significant when used with binary numbers.
+3. These formats are case insensitive.
