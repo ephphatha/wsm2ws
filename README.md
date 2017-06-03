@@ -33,11 +33,13 @@ Refer to the [issue tracker](https://github.com/ephphatha/wsm2ws/issues) (specif
 # Whitespace Assemply Language Syntax
 Keywords are generally derived from the first verb of the command description from the [Whitespace Tutorial](https://web.archive.org/web/20150618184706/http://compsoc.dur.ac.uk/whitespace/tutorial.php), with some abbreviations just to keep tokens to five characters or less.
 
+## Comments
 A semicolon (`;`) starts a comment, everything from that token to the end of the line will be ignored.
 
+## Keywords
 The following keywords are available. In fact, any tokens that start with a listed keyword can be used (with some exceptions noted below).
 
-## Stack Manipulation
+### Stack Manipulation
 * `push`: Pushes a value to the stack.<sup>1</sup>
 * `dup`: Duplicates the top stack item.
 * `copy`: Copies the *n*th stack item to the top of the stack.<sup>1</sup>
@@ -45,7 +47,7 @@ The following keywords are available. In fact, any tokens that start with a list
 * `pop`: Removes the top stack item.
 * `slide`: Removes the top *n* stack items, keeping the top item.<sup>1</sup>
 
-## Arithmetic
+### Arithmetic
 * `add`: Addition
 * `sub`: Subtraction
 * `mul`: Multiplication
@@ -53,11 +55,11 @@ The following keywords are available. In fact, any tokens that start with a list
 * `mod`: Modulo  
 Synonyms: `rem`
 
-## Heap Access
+### Heap Access
 * `stor`: Stores the value of the top stack item at the address given by the next stack item.
 * `retr`: Retrieves the value at the address given by the top stack item and pushes it to the stack.
 
-## Flow Control
+### Flow Control
 * `label`: Declares a label.<sup>2</sup>
 * `call`: Call a subroutine, effectively a jump to a label that also marks the current location for a later `ret`.<sup>2</sup>
 * `jmp`: Unconditionally jump to a label.<sup>2</sup>  
@@ -71,7 +73,7 @@ Note: Pattern matching for this command is actually `/^ret(?!r)/` so that `retri
 * `end`: End the program.  
 Synonyms: `exit`
 
-## I/O
+### I/O
 * `ochar`: Output the character given by the value of the top stack item.  
 Synonyms: `putchar`
 * `onum`: Output the value of the top stack item.  
@@ -81,6 +83,32 @@ Synonyms: `getchar`
 * `inum`: Read a number and store it at the address given by the top stack item.  
 Synonyms: `getnum`
 
-## Notes
-1. These commands expect the next token to be an integer which will then be encoded to the signed binary format described in the spec. If the next token doesn't look like an integer (i.e. doesn't match the regex /[+-]?\d+/) a 0 value will be inserted and a warning printed to STDERR.
-2. These commands (currently) expect the next token to be a natural number (non-negative integer) which will then be encoded as a list of tabs and spaces as described in the spec. This is currently accomplished by converting the label to an unsigned binary format (i.e. the format used for numbers without a sign bit). As the spec allows for an empty label but the tokeniser treats consecutive whitespace as a single delimiter, if the next token doesn't look like a natural number (i.e. doesn't match the regex /\d+/) an empty label is inserted and parsing continues with no warning.
+### Notes
+1. These commands expect the next token to be a number as described below. If the next token doesn't look like a number a 0 value will be inserted and a warning printed to STDERR.
+2. These commands expect the next token to be a label as described below. As the spec allows for an empty label if the next token doesn't match the label rules an empty label is inserted and parsing continues with no warning.
+
+## Numbers
+Numbers can be written in any of the following formats:
+
+* Integer (`[+-]?\d+`) - A sequence of digits.<sup>1</sup> <sup>2</sup>
+* Binary (`[+-]?0b[01]+`) - The string `0b` followed by a sequence of `0` and `1` characters.<sup>1</sup> <sup>3</sup>
+* Octal (`[+-]?0[0-7]+`) - A `0` character followed by a sequence of digits between `0` and `7` (inclusive).<sup>1</sup>
+* Hex (`[+-]?0x[\da-fA-F]+`) - The string `0x` followed by a sequence of digits or the characters `a` to `f` (either upper or lower case).<sup>1</sup>
+* Character literal (`'\?.'`) - A single quoted character or escape sequence. Character literals will be converted to the corresponding ascii character code value.
+
+### Notes
+1. These formats can optionally be prefixed with a `+` or `-` character to specify the sign.
+2. To shorten output slightly the integer 0 has special case handling so it is encoded as an empty sequence instead of a single space character. To avoid this behaviour use the binary/octal/hex format 
+3. Leading `0` digits are significant when used with binary numbers.
+
+## Labels
+While labels are not strictly numeric, for ease of representing labels in WSM syntax the following unsigned numerical formats are used:
+
+* Integer (`\d+`) - A sequence of digits.<sup>1</sup>
+* Binary (`0b[01]+`) - The string `0b` followed by a sequence of `0` and `1` characters.<sup>2</sup>
+* Octal (`0[0-7]`) - A `0` character followed by a sequence of digits between `0` and `7` (inclusive).
+* Hex (`0x[\da-fA-F]`) - The string `0x` followed by a sequence of digits or the characters `a` to `f` (either upper or lower case).
+
+### Notes
+1. To shorten output slightly the integer 0 has special case handling so it is encoded as an empty sequence instead of a single space character. To avoid this behaviour use the binary/octal/hex format 
+2. Leading `0` digits are significant when used with binary numbers.
