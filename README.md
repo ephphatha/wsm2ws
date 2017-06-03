@@ -50,7 +50,8 @@ The following keywords are available. In fact, any tokens that start with a list
 * `sub`: Subtraction
 * `mul`: Multiplication
 * `div`: Integer Division
-* `mod`: Modulo
+* `mod`: Modulo  
+Synonyms: `rem`
 
 ## Heap Access
 * `stor`: Stores the value of the top stack item at the address given by the next stack item.
@@ -64,6 +65,7 @@ Synonyms: `jump`
 * `jez`: Jump to a label if the top stack item is 0.<sup>2</sup>  
 Synonyms: `jz`
 * `jlz`: Jump to a label if the top stack item is negative.<sup>2</sup>  
+Synonyms: `jn`
 * `ret`: Return to the location of the last `call` command.  
 Note: Pattern matching for this command is actually `/^ret(?!r)/` so that `retrieve` unambiguously matches `retr`
 * `end`: End the program.  

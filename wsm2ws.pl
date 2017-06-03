@@ -29,7 +29,7 @@ sub main {
   $ops{qr/^sub/i} = { op => 'tsst' };
   $ops{qr/^mul/i} = { op => 'tssn' };
   $ops{qr/^div/i} = { op => 'tsts' };
-  $ops{qr/^mod/i} = { op => 'tstt' };
+  $ops{qr/^(mod|rem)/ni} = { op => 'tstt' };
 
   # Heap Access
   $ops{qr/^stor/i} = { op => 'tts' };
@@ -40,7 +40,7 @@ sub main {
   $ops{qr/^call/i} = { op => "nst", param => 'label' };
   $ops{qr/^ju?mp/i} = { op => "nsn", param => 'label' };
   $ops{qr/^je?z/i} = { op => 'nts', param => 'label' };
-  $ops{qr/^jlz/i} = { op => 'ntt', param => 'label' };
+  $ops{qr/^j(n|lz)/ni} = { op => 'ntt', param => 'label' };
   $ops{qr/^ret(?!r)/i} = { op => 'ntn'};
   $ops{qr/^e(nd|xit)/ni} = { op => 'nnn'};
 
