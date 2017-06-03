@@ -6,8 +6,16 @@ use warnings;
 use feature qw(say);
 
 use File::Basename;
-use Text::ParseWords;
+use Parse::Token::Lite;
+use String::Unescape qw(unescape);
 use Tie::RegexpHash;
+
+use experimental qw(switch);
+
+use constant {
+  NUMBER_TOKEN_NAMES => {map { $_ => 1 } qw(SIGNED_NUMBER NUMBER SIGNED_BINARY BINARY SIGNED_OCTAL OCTAL SIGNED_HEX HEX CHAR)},
+  LABEL_TOKEN_NAMES => {map { $_ => 1 } qw(LABEL BINARY OCTAL HEX NUMBER)}
+};
 
 main(@ARGV);
 
@@ -56,50 +64,95 @@ sub main {
 
   my @instructions = ();
 
-  my $need_param;
+  my $parser = Parse::Token::Lite->new(rulemap => {
+    MAIN => [
+      { name => 'SIGNED_BINARY', re => qr/\b[+-]0b[01]+\b/ },
+      { name => 'BINARY', re => qr/\b0b[01]+\b/ },
+      { name => 'SIGNED_OCTAL', re => qr/\b[+-]0[0-7]+\b/ },
+      { name => 'OCTAL', re => qr/\b0[0-7]+\b/ },
+      { name => 'SIGNED_HEX', re => qr/\b[+-]0x[\da-f]+\b/ },
+      { name => 'HEX', re => qr/\b0x[\da-f]+\b/ },
+      { name => 'SIGNED_NUMBER', re => qr/\b[+-]\d+\b/ },
+      { name => 'NUMBER', re => qr/\b\d+\b/ },
+      { name => 'CHAR', re => qr/'\\?.'/ },
+      { name => 'LABEL', re => qr/"[^"]*"/ },
+      { name => 'COMMENT', re => qr/;.*/ },
+      { name => 'KEYWORD', re => qr/\w+/ },
+      { name => 'WHITESPACE', re => qr/\s+/ },
+      { name => 'DEFAULT', re => qr/.*/ },
+    ]
+  });
 
   while (<$ifh>) {
-    s/;.*$//;
+    $parser->from($_);
 
-    foreach my $token (shellwords($_)) {
-      if ($need_param) {
-        if ($need_param eq 'number') {
-          my $number = $token =~ /^[+-]?\d+$/ ? $token : '0';
-          $instructions[-1]{op} .= encode_number($number);
-          $instructions[-1]{token} .= " $number";
-          unless ($number eq $token) {
-            warn "Expected a number but found: $token";
-            $need_param = undef;
-            redo;
-          }
-        } elsif ($need_param eq 'label') {
-          my $label = $token =~ /^\d+$/ ? $token : '';
-          $instructions[-1]{op} .= encode_label($label);
-          $instructions[-1]{token} .= " '$label'";
-          unless (length($label)) {
-            #handle null labels
-            $need_param = undef;
-            redo;
+    while (!$parser->eof) {
+      my $token = $parser->nextToken;
+
+      TOKEN: {
+        next unless $token->rule->name eq 'KEYWORD';
+
+        my ($op, $param) = @{$ops{$token->data}}{qw(op param)};
+
+        unless ($op) {
+          warn "Unrecognised token: ".$token->data;
+          next;
+        }
+
+        my %instruction = (
+          op => $op,
+          token => $token->data
+        );
+
+        if ($param) {
+          do {
+            $token = $parser->nextToken;
+          } while ($token->rule->name eq 'WHITESPACE');
+
+          given ($param) {
+            when ('number') {
+              my $isNumberToken = NUMBER_TOKEN_NAMES->{$token->rule->name};
+
+              if ($isNumberToken) {
+                $instruction{op} .= whitespace_encode($token->data, signed => 1);
+                $instruction{token} .= " ".$token->data;
+              } else {
+                $instruction{op} .= whitespace_encode('0', signed => 1);
+                $instruction{token} .= " 0";
+              }
+
+              unless ($isNumberToken) {
+                warn "Expected a number but found: \"".$token->data."\"";
+                push @instructions, \%instruction;
+                redo TOKEN;
+              }
+            }
+            when ('label') {
+              my $isLabelToken = LABEL_TOKEN_NAMES->{$token->rule->name};
+
+              if ($token->rule->name eq 'LABEL') {
+                warn "Dynamic labels have not been implemented!";
+                $instruction{op} .= whitespace_encode('0');
+                $instruction{token} .= " NULL";
+                next;
+              }
+
+              if ($isLabelToken) {
+                $instruction{op} .= whitespace_encode($token->data);
+                $instruction{token} .= " ".$token->data;
+              } else {
+                # Null label
+                $instruction{op} .= whitespace_encode('0');
+                $instruction{token} .= " NULL";
+                push @instructions, \%instruction;
+                redo TOKEN;
+              }
+            }
           }
         }
-      
-        $need_param = undef;
-        next;
+
+        push @instructions, \%instruction;
       }
-
-      my $instruction = $ops{$token};
-
-      unless ($instruction) {
-        warn "Unrecognised token: $token";
-        next;
-      }
-
-      (my $op, $need_param) = @$instruction{('op', 'param')};
-
-      push @instructions, {
-        op => $op,
-        token => $token,
-      };
     }
   }
 
@@ -124,13 +177,20 @@ sub main {
   say "See $outFilename for transpiled source";
 }
 
-sub encode_number {
-  my $number = shift;
-  # Special case handling for 0 to shorten output slightly
-  return ($number < 0 ? 't' : 's').(sprintf('%b', abs($number)) =~ tr/01//cdr =~ s/^0$//r =~ tr/01/st/r).'n';
-}
+sub whitespace_encode {
+  my $token = shift;
+  my %options = @_;
 
-sub encode_label {
-  my $label = shift;
-  return (length($label) ? sprintf('%b', $label) =~ tr/01//cdr =~ tr/01/st/r : '' ).'n';
+  my $sign = '';
+  $sign = $token =~ /^[+-]/g =~ tr/+-/st/r || 's' if $options{signed};
+
+  my $encodedString = (
+    $token =~ /\G(0(?:b[01]+|[0-7]+|x[\da-f]+))$/ ? sprintf('%b', oct($1)) : # binary/octal/hex string
+    $token =~ /\G([1-9][\d]*)$/ ? sprintf('%b', $1) : # number
+    $token =~ /^'(\\.)'$/ ? sprintf('%b', ord(unescape($1))) : # escaped char
+    $token =~ /^'(.)'$/ ? sprintf('%b', ord($1)) : # char
+    '' # special case for 0 (or unrecognised token)
+  ) =~ tr/01/st/r;
+
+  return $sign.$encodedString.'n';
 }
