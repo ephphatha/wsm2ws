@@ -17,38 +17,38 @@ sub main {
   tie %ops, 'Tie::RegexpHash';
   
   # Stack Manipulation
-  $ops{qr/^push/i} = {op => 'ss', param => 'number'};
-  $ops{qr/^dup/i} = 'sns';
-  $ops{qr/^copy/i} = {op => 'sts', param => 'number'};
-  $ops{qr/^swap/i} = 'snt';
-  $ops{qr/^pop/i} = 'snn';
-  $ops{qr/^slide/i} = {op => 'stn', param => 'number'};
+  $ops{qr/^push/i} = { op => 'ss', param => 'number' };
+  $ops{qr/^dup/i} = { op => 'sns' };
+  $ops{qr/^copy/i} = { op => 'sts', param => 'number' };
+  $ops{qr/^swap/i} = { op => 'snt' };
+  $ops{qr/^pop/i} = { op => 'snn' };
+  $ops{qr/^slide/i} = { op => 'stn', param => 'number' };
 
   # Arithmetic
-  $ops{qr/^add/i} = 'tsss';
-  $ops{qr/^sub/i} = 'tsst';
-  $ops{qr/^mul/i} = 'tssn';
-  $ops{qr/^div/i} = 'tsts';
-  $ops{qr/^mod/i} = 'tstt';
+  $ops{qr/^add/i} = { op => 'tsss' };
+  $ops{qr/^sub/i} = { op => 'tsst' };
+  $ops{qr/^mul/i} = { op => 'tssn' };
+  $ops{qr/^div/i} = { op => 'tsts' };
+  $ops{qr/^mod/i} = { op => 'tstt' };
 
   # Heap Access
-  $ops{qr/^stor/i} = 'tts';
-  $ops{qr/^retr/i} = 'ttt';
+  $ops{qr/^stor/i} = { op => 'tts' };
+  $ops{qr/^retr/i} = { op => 'ttt' };
 
   # Flow Control
-  $ops{qr/^label/i} = {op => "nss", param => 'label'};
-  $ops{qr/^call/i} = {op => "nst", param => 'label'};
-  $ops{qr/^ju?mp/i} = {op => "nsn", param => 'label'};
-  $ops{qr/^je?z/i} = {op => 'nts', param => 'label'};
-  $ops{qr/^jlz/i} = {op => 'ntt', param => 'label'};
-  $ops{qr/^ret(?!r)/i} = 'ntn';
-  $ops{qr/^e(nd|xit)/i} = 'nnn';
+  $ops{qr/^label/i} = { op => "nss", param => 'label' };
+  $ops{qr/^call/i} = { op => "nst", param => 'label' };
+  $ops{qr/^ju?mp/i} = { op => "nsn", param => 'label' };
+  $ops{qr/^je?z/i} = { op => 'nts', param => 'label' };
+  $ops{qr/^jlz/i} = { op => 'ntt', param => 'label' };
+  $ops{qr/^ret(?!r)/i} = { op => 'ntn'};
+  $ops{qr/^e(nd|xit)/i} = { op => 'nnn'};
 
   # I/O
-  $ops{qr/^(o|put)char/i} = 'tnss';
-  $ops{qr/^(o|put)num/i} = 'tnst';
-  $ops{qr/^(i|get)char/ni} = 'tnts';
-  $ops{qr/^(i|get)num/ni} = 'tntt';
+  $ops{qr/^(o|put)char/i} = { op => 'tnss'};
+  $ops{qr/^(o|put)num/i} = { op => 'tnst'};
+  $ops{qr/^(i|get)char/ni} = { op => 'tnts'};
+  $ops{qr/^(i|get)num/ni} = { op => 'tntt'};
 
   my $filename = shift or die "Usage $0 <filename>";
 
@@ -94,7 +94,7 @@ sub main {
         next;
       }
 
-      (my $op, $need_param) = ref($instruction) eq 'HASH' ? @$instruction{('op', 'param')} : ($instruction);
+      (my $op, $need_param) = @$instruction{('op', 'param')};
 
       push @instructions, {
         op => $op,
