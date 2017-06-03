@@ -34,6 +34,7 @@ Refer to the [issue tracker](https://github.com/ephphatha/wsm2ws/issues) (specif
 Keywords are generally derived from the first verb of the command description from the [Whitespace Tutorial](https://web.archive.org/web/20150618184706/http://compsoc.dur.ac.uk/whitespace/tutorial.php), with some abbreviations just to keep tokens to five characters or less.
 
 The following keywords are available. In fact, any tokens that start with a listed keyword can be used (with some exceptions noted below).
+
 ## Stack Manipulation
 * `push`: Pushes a value to the stack.<sup>1</sup>
 * `dup`: Duplicates the top stack item.
@@ -56,17 +57,25 @@ The following keywords are available. In fact, any tokens that start with a list
 ## Flow Control
 * `label`: Declares a label.<sup>2</sup>
 * `call`: Call a subroutine, effectively a jump to a label that also marks the current location for a later `ret`.<sup>2</sup>
-* `jmp`: Unconditionally jump to a label.<sup>2</sup> Note: `jump` is accepted as a synonym.
-* `jez`: Jump to a label if the top stack item is 0.<sup>2</sup> Note: `jz` is accepted as a synonym.
-* `jlz`: Jump to a label if the top stack item is negative.<sup>2</sup>
-* `ret`: Return to the location of the last `call` command. Note: Pattern matching for this command is actually `/^ret(?!r)/` so that `retrieve` unambiguously matches `retr`
-* `end`: End the program. Note: `exit` is accepted as a synonym.
+* `jmp`: Unconditionally jump to a label.<sup>2</sup>  
+Synonyms: `jump`
+* `jez`: Jump to a label if the top stack item is 0.<sup>2</sup>  
+Synonyms: `jz`
+* `jlz`: Jump to a label if the top stack item is negative.<sup>2</sup>  
+* `ret`: Return to the location of the last `call` command.  
+Note: Pattern matching for this command is actually `/^ret(?!r)/` so that `retrieve` unambiguously matches `retr`
+* `end`: End the program.  
+Synonyms: `exit`
 
 ## I/O
-* `ochar`: Output the character given by the value of the top stack item. Note: `putchar` is accepted as a synonym.
-* `onum`: Output the value of the top stack item. Note: `putnum` is accepted as a synonym.
-* `ichar`: Read a character and store it at the address given by the top stack item. Note: `getchar` is accepted as a synonym.
-* `inum`: Read a number and store it at the address given by the top stack item. Note: `getnum` is accepted as a synonym.
+* `ochar`: Output the character given by the value of the top stack item.  
+Synonyms: `putchar`
+* `onum`: Output the value of the top stack item.  
+Synonyms: `putnum`
+* `ichar`: Read a character and store it at the address given by the top stack item.  
+Synonyms: `getchar`
+* `inum`: Read a number and store it at the address given by the top stack item.  
+Synonyms: `getnum`
 
 ## Notes
 1. These commands expect the next token to be an integer which will then be encoded to the signed binary format described in the spec. If the next token doesn't look like an integer (i.e. doesn't match the regex /[+-]?\d+/) a 0 value will be inserted and a warning printed to STDERR.
