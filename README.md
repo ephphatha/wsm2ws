@@ -33,6 +33,8 @@ Refer to the [issue tracker](https://github.com/ephphatha/wsm2ws/issues) (specif
 # Whitespace Assemply Language Syntax
 Keywords are generally derived from the first verb of the command description from the [Whitespace Tutorial](https://web.archive.org/web/20150618184706/http://compsoc.dur.ac.uk/whitespace/tutorial.php), with some abbreviations just to keep tokens to five characters or less.
 
+A semicolon (`;`) starts a comment, everything from that token to the end of the line will be ignored.
+
 The following keywords are available. In fact, any tokens that start with a listed keyword can be used (with some exceptions noted below).
 
 ## Stack Manipulation
