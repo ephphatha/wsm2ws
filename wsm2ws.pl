@@ -13,8 +13,8 @@ use Tie::RegexpHash;
 use experimental qw(switch);
 
 use constant {
-  NUMBER_TOKEN_NAMES => {map { $_ => 1 } qw(SIGNED_NUMBER NUMBER SIGNED_BINARY BINARY SIGNED_OCTAL OCTAL SIGNED_HEX HEX CHAR)},
-  LABEL_TOKEN_NAMES => {map { $_ => 1 } qw(LABEL BINARY OCTAL HEX NUMBER)}
+  NUMBER_TOKEN_NAMES => {map { $_ => 1 } qw(SIGNED_INTEGER INTEGER SIGNED_BINARY BINARY SIGNED_OCTAL OCTAL SIGNED_HEX HEX CHAR)},
+  LABEL_TOKEN_NAMES => {map { $_ => 1 } qw(LABEL BINARY OCTAL HEX INTEGER)}
 };
 
 main(@ARGV);
@@ -72,8 +72,8 @@ sub main {
       { name => 'OCTAL', re => qr/\b0[0-7]+\b/ },
       { name => 'SIGNED_HEX', re => qr/\b[+-]0x[\da-f]+\b/ },
       { name => 'HEX', re => qr/\b0x[\da-f]+\b/ },
-      { name => 'SIGNED_NUMBER', re => qr/\b[+-]\d+\b/ },
-      { name => 'NUMBER', re => qr/\b\d+\b/ },
+      { name => 'SIGNED_INTEGER', re => qr/\b[+-]\d+\b/ },
+      { name => 'INTEGER', re => qr/\b\d+\b/ },
       { name => 'CHAR', re => qr/'\\?.'/ },
       { name => 'LABEL', re => qr/"[^"]*"/ },
       { name => 'COMMENT', re => qr/;.*/ },
