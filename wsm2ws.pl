@@ -45,6 +45,7 @@ sub main {
 
   # Flow Control
   $ops{qr/^label/i} = { op => "nss", param => 'label' };
+  $ops{qr/:$/i} = { op => "nss", param => 'self' };
   $ops{qr/^call/i} = { op => "nst", param => 'label' };
   $ops{qr/^ju?mp/i} = { op => "nsn", param => 'label' };
   $ops{qr/^je?z/i} = { op => 'nts', param => 'label' };
@@ -66,18 +67,18 @@ sub main {
 
   my $parser = Parse::Token::Lite->new(rulemap => {
     MAIN => [
-      { name => 'SIGNED_BINARY', re => qr/\b[+-]0b[01]+\b/ },
-      { name => 'BINARY', re => qr/\b0b[01]+\b/ },
-      { name => 'SIGNED_OCTAL', re => qr/\b[+-]0[0-7]+\b/ },
-      { name => 'OCTAL', re => qr/\b0[0-7]+\b/ },
-      { name => 'SIGNED_HEX', re => qr/\b[+-]0x[\da-fA-F]+\b/ },
-      { name => 'HEX', re => qr/\b0x[\da-fA-F]+\b/ },
-      { name => 'SIGNED_INTEGER', re => qr/\b[+-]\d+\b/ },
-      { name => 'INTEGER', re => qr/\b\d+\b/ },
+      { name => 'SIGNED_BINARY', re => qr/[+-]0b[01]+/ },
+      { name => 'BINARY', re => qr/0b[01]+(?!:)/ },
+      { name => 'SIGNED_OCTAL', re => qr/[+-]0[0-7]+/ },
+      { name => 'OCTAL', re => qr/0[0-7]+(?!:)/ },
+      { name => 'SIGNED_HEX', re => qr/[+-]0x[\da-fA-F]+/ },
+      { name => 'HEX', re => qr/0x[\da-fA-F]+(?!:)/ },
+      { name => 'SIGNED_INTEGER', re => qr/[+-]\d+/ },
+      { name => 'INTEGER', re => qr/\d+(?!:)/ },
       { name => 'CHAR', re => qr/'\\?.'/ },
       { name => 'LABEL', re => qr/"[^"]*"/ },
       { name => 'COMMENT', re => qr/;.*/ },
-      { name => 'KEYWORD', re => qr/\w+/ },
+      { name => 'KEYWORD', re => qr/\w+:?/ },
       { name => 'WHITESPACE', re => qr/\s+/ },
       { name => 'DEFAULT', re => qr/.*/ },
     ]
@@ -105,19 +106,23 @@ sub main {
         );
 
         if ($param) {
-          do {
-            $token = $parser->nextToken;
-          } while ($token->rule->name eq 'WHITESPACE');
+          unless ($param eq 'self') {
+            do {
+              $token = $parser->nextToken;
+            } while ($token->rule->name eq 'WHITESPACE');
+          }
 
           given ($param) {
             when (/^number/) {
               my $isNumberToken = NUMBER_TOKEN_NAMES->{$token->rule->name};
               my $isOptional = $param =~ /optional$/;
+
               if ($isOptional && $isNumberToken) {
                 warn "Shorthand instructions have not been implemented!";
                 push @instructions, \%instruction;
                 redo TOKEN;
               }
+
               if ($isNumberToken) {
                 $instruction{op} .= whitespace_encode($token->data, signed => 1);
                 $instruction{token} .= " ".$token->data;
@@ -141,7 +146,7 @@ sub main {
                 warn "Dynamic labels have not been implemented!";
                 $instruction{op} .= whitespace_encode('0');
                 $instruction{token} .= " NULL";
-                next;
+                break;
               }
 
               if ($isLabelToken) {
@@ -153,6 +158,17 @@ sub main {
                 $instruction{token} .= " NULL";
                 push @instructions, \%instruction;
                 redo TOKEN;
+              }
+            }
+            when ('self') {
+              # Special case for label: syntax
+              if ($token->data =~ /(0[bx]?[\da-fA-F]+|\d+):/) {
+                $instruction{op} .= whitespace_encode($1);
+              } elsif ($token->data =~ /(.):/) {
+                $instruction{op} .= whitespace_encode("'$1'");
+              } else {
+                warn "Unrecognised label format";
+                $instruction{op} .= whitespace_encode('0');
               }
             }
           }
