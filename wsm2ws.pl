@@ -42,11 +42,11 @@ sub main {
   $ops{qr/^je?z/i} = { op => 'nts', param => 'label' };
   $ops{qr/^jlz/i} = { op => 'ntt', param => 'label' };
   $ops{qr/^ret(?!r)/i} = { op => 'ntn'};
-  $ops{qr/^e(nd|xit)/i} = { op => 'nnn'};
+  $ops{qr/^e(nd|xit)/ni} = { op => 'nnn'};
 
   # I/O
-  $ops{qr/^(o|put)char/i} = { op => 'tnss'};
-  $ops{qr/^(o|put)num/i} = { op => 'tnst'};
+  $ops{qr/^(o|put)char/ni} = { op => 'tnss'};
+  $ops{qr/^(o|put)num/ni} = { op => 'tnst'};
   $ops{qr/^(i|get)char/ni} = { op => 'tnts'};
   $ops{qr/^(i|get)num/ni} = { op => 'tntt'};
 
