@@ -8,7 +8,7 @@ use feature qw(say);
 use Algorithm::Combinatorics qw(combinations_with_repetition);
 use File::Basename;
 use Parse::Token::Lite;
-use String::Unescape qw(unescape);
+use String::Unescape;
 use Tie::RegexpHash;
 
 use experimental qw(switch);
@@ -247,7 +247,7 @@ sub whitespace_encode {
     $token =~ /\G0b([01]+)$/i ? $1 : # binary
     $token =~ /\G(0(?:[0-7]+|x[\da-f]+))$/i ? sprintf('%b', oct($1)) : # octal/hex
     $token =~ /\G([1-9][\d]*)$/ ? sprintf('%b', $1) : # integer (non-zero)
-    $token =~ /^'(\\.)'$/ ? sprintf('%b', ord(unescape($1))) : # escaped char
+    $token =~ /^'(\\.)'$/ ? sprintf('%b', ord(String::Unescape::unescape($1))) : # escaped char
     $token =~ /^'(.)'$/ ? sprintf('%b', ord($1)) : # char
     '' # special case for 0 (or unrecognised token)
   ) =~ tr/01/st/r;
