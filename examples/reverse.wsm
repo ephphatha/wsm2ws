@@ -1,3 +1,4 @@
+; Takes a null-terminated string from STDIN and outputs the reversed string to STDOUT
 ; https://codegolf.stackexchange.com/questions/242/reverse-stdin-and-place-on-stdout
 push 0 ;[0]
 input_loop:

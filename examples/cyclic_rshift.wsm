@@ -1,0 +1,8 @@
+; Assumes input represents a 4 byte word and performs a rotate/cyclic right shift
+; Written to solve the following Code Golf challenge which wanted a different number
+;  with the same Hamming weight (count of active bits).
+; https://codegolf.stackexchange.com/questions/124083/different-number-same-weight
+push 0 dup getnum retrieve ; get n
+dup mod 2 jez "even" ; check if divisible by 2
+push 0x100 dup mul dup mul add ; if odd add 2^32 and fall through
+even: div 2 putnum ; divide by 2 and output
