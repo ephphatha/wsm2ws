@@ -5,6 +5,7 @@ use warnings;
 
 use feature qw(say);
 
+use Algorithm::Combinatorics qw(combinations_with_repetition);
 use File::Basename;
 use Parse::Token::Lite;
 use String::Unescape qw(unescape);
@@ -86,6 +87,8 @@ sub main {
     ]
   });
 
+  my (%seenLabels, %dynamicLabels);
+
   while (<$ifh>) {
     $parser->from($_);
 
@@ -148,19 +151,22 @@ sub main {
             when ('label') {
               my $isLabelToken = LABEL_TOKEN_NAMES->{$token->rule->name};
 
-              if ($token->rule->name eq 'LABEL') {
-                warn "Dynamic labels have not been implemented!";
-                $instruction->{op} .= whitespace_encode('0');
-                $instruction->{token} .= " NULL";
-                break;
-              }
-
               if ($isLabelToken) {
-                $instruction->{op} .= whitespace_encode($token->data);
-                $instruction->{token} .= " ".$token->data;
+                if ($token->rule->name eq 'LABEL') {
+                  $dynamicLabels{$token->data} = [] unless defined($dynamicLabels{$token->data});
+                  push @{$dynamicLabels{$token->data}}, $instruction; # mark the label for later
+                  $instruction->{token} .= " ".$token->data;
+                } else {
+                  my $label = whitespace_encode($token->data);
+                  $seenLabels{$label} = 1;
+                  $instruction->{op} .= $label;
+                  $instruction->{token} .= " ".$token->data;
+                }
               } else {
                 # Null label
-                $instruction->{op} .= whitespace_encode('0');
+                my $label = whitespace_encode('0');
+                $seenLabels{$label} = 1;
+                $instruction->{op} .= $label;
                 $instruction->{token} .= " NULL";
                 push @instructions, $instruction;
                 redo TOKEN;
@@ -168,13 +174,14 @@ sub main {
             }
             when ('self') {
               # Special case for label: syntax
-              if ($token->data =~ /(0[bx]?[\da-f]+|\d+):/i) {
-                $instruction->{op} .= whitespace_encode($1);
-              } elsif ($token->data =~ /(.):/) {
-                $instruction->{op} .= whitespace_encode("'$1'");
+              my $label = $token->data =~ s/:$//r;
+              if ($label =~ /^(0[bx]?[\da-f]+|\d+)$/ni) {
+                $instruction->{op} .= whitespace_encode($label);
               } else {
-                warn "Unrecognised label format";
-                $instruction->{op} .= whitespace_encode('0');
+                # bareword - treat as if it was a quoted string to allow backrefs
+                $label = "\"$label\"";
+                $dynamicLabels{$label} = [] unless defined($dynamicLabels{$label});
+                push @{$dynamicLabels{$label}}, $instruction; # mark the label for later
               }
             }
           }
@@ -186,6 +193,29 @@ sub main {
   }
 
   close($ifh);
+
+  # process label strings
+  my $i = 0;
+  LABEL: foreach my $instructions (sort { scalar @$b <=> scalar @$a } values %dynamicLabels) {
+    while (1) {
+      my $charSequenceIter = combinations_with_repetition(['s', 't'], $i);
+      while (my $charSequence = $charSequenceIter->next()) {
+        my $label = join('', @$charSequence)."n";
+
+        next if $seenLabels{$label};
+
+        foreach (@$instructions) {
+          $_->{op} .= $label;
+        }
+
+        $seenLabels{$label} = 1;
+
+        next LABEL;
+      }
+
+      $i++;
+    }
+  }
 
   my $ws = join('', map { $_->{op} } @instructions);
 

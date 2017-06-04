@@ -11,41 +11,41 @@ The program will output a human readable version of the code to STDOUT followed 
 ## Example
     $ cat examples/reverse.wsm
     push 0 ; initialise stack with 0. state: [0]
-    1: ; input loop
+    input_loop:
     dup ichar ; read character from stdin (stored at address n). state: [n] [n:<char>]
     dup retr ; get character value from heap address n. state: [n, <char>]
-    jez 0; null character read so assume end of input and start output loop. state: [n]
+    jez "output_loop"; null character read so assume end of input and start output loop. state: [n]
     add 1 ; increment n. state: [n+1]
-    jmp 1 ; continue input loop
-    0: ; output loop
+    jmp "input_loop" ; continue input loop
+    output_loop:
     sub 1 ; decrement n. state: [n-1]
     dup retr ; get character value from heap address n. state: [n, <char>]
     ochar ; write character to stdout. state: [n]
-    jmp 0 ; continue output loop
+    jmp "output_loop" ; continue output loop
 
     $ ./wsm2ws.pl examples/reverse.wsm
     sssnnsstnsnstntssnstttntsnssstntsssnsntnnssnssstntsstsnsttttnssnsnn
     sssn  ; push 0
-    nsstn ; 1:
+    nsssn ; input_loop:
     sns   ; dup
     tnts  ; ichar
     sns   ; dup
     ttt   ; retr
-    ntsn  ; jez 0
+    ntsn  ; jez "output_loop"
     ssstn ; push 1
     tsss  ; add
-    nsntn ; jmp 1
-    nssn  ; 0:
+    nsnsn ; jmp "input_loop"
+    nssn  ; output_loop:
     ssstn ; push 1
     tsst  ; sub
     sns   ; dup
     ttt   ; retr
     tnss  ; ochar
-    nsnn  ; jmp 0
+    nsnn  ; jmp "output_loop"
     See examples/reverse.ws for transpiled source
 
 ## Notes
-This program does not attempt to validate or verify the whitespace code beyond ensuring correct syntax. It is up to the programmer to ensure the code will execute without errors. Problems with the example above include a missing end token, no way to leave the output loop, and there's no check to avoid executing retr with a negative heap address.
+This program does not attempt to validate or verify the Whitespace code beyond ensuring correct syntax. It is up to the programmer to ensure the code will execute without errors. Problems with the example above include a missing end token, no way to leave the output loop, and there's no check to avoid executing retr with a negative heap address.
 
 ## Todo
 See the list of [issues with the [enhancement] label](https://github.com/ephphatha/wsm2ws/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement).
@@ -131,14 +131,19 @@ Numbers can be written in any of the following formats:
 4. These formats are case insensitive.
 
 ## Labels
-While labels are not strictly numeric, for ease of representing labels in WSM syntax the following unsigned numerical formats are used:
+Labels can be written in any of the following formats:
 
-* Integer (`\d+`) - A sequence of digits.<sup>1</sup>
-* Binary (`0b[01]+`) - The string `0b` followed by a sequence of `0` and `1` characters.<sup>2</sup> <sup>3</sup>
-* Octal (`0[0-7]`) - A `0` character followed by a sequence of digits between `0` and `7` (inclusive).
-* Hex (`0x[\da-f]`) - The string `0x` followed by a sequence of digits or the characters `a` to `f`.<sup>3</sup>
+* Integer (`\d+`) - A sequence of 1 or more digits.<sup>1</sup> <sup>2</sup>
+* Binary (`0b[01]+`) - The string `0b` followed by a sequence 1 or more of `0` and `1` characters.<sup>1</sup> <sup>3</sup> <sup>4</sup>
+* Octal (`0[0-7]+`) - A `0` character followed by a sequence of 1 or more digits between `0` and `7` (inclusive).<sup>1</sup>
+* Hex (`0x[\da-f]+`) - The string `0x` followed by a sequence of 1 or more digits or the characters `a` to `f`.<sup>1</sup> <sup>4</sup>
+* Quoted string (`"[^"]*"`) - A sequence of 0 or more non-double-quote characters surrounded by double-quotes.<sup>5</sup>
 
 ### Notes
-1. To shorten output slightly the integer 0 has special case handling so it is encoded as an empty sequence instead of a single space character. To avoid this behaviour use the binary/octal/hex format 
-2. Leading `0` digits are significant when used with binary numbers.
-3. These formats are case insensitive.
+1. While labels are not numeric, for ease of representing labels in WSM syntax unsigned numerical formats are allowed. The binary representation of the number will be translated to a sequence of spaces and tabs to make a valid label.
+2. To shorten output slightly the integer 0 has special case handling so it is encoded as an empty sequence instead of a single space character. To avoid this behaviour use the binary/octal/hex format 
+3. Leading `0` digits are significant when used with binary numbers.
+4. These formats are case insensitive.
+5. The following rules apply when using strings for labels:
+   * When a string is used for a label a sequence of space/tab characters (followed by a newline) will be generated for each reference in the Whitespace output such that the most frequently referenced strings receive the shortest unused sequence. Using the reverse program as an example `output_loop` gets the empty sequence because it has three references in the code and `input_loop` gets a length 1 sequence because it has two references. If there was another command using an implicit label (or the integer `0` as a label) the empty sequence would be unavailable, so `output_loop` would get a length 1 sequence (e.g. `sn`) and `input_loop` would get the next unique sequence of length 1 or greater (e.g. `tn`).
+   * To support the short syntax for declaring a label when a `short_label:` token is encountered the text (excluding the `:`) will be treated as if it was a quoted string so that flow control statements can refer back to that location. For example `short_label: jump "short_label"` is equivalent to `label "short_label" jump "short_label"` and both commands will have the same generated label in the Whitespace output.
