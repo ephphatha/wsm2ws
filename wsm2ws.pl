@@ -62,7 +62,7 @@ sub main {
   $ops{qr/^(i|get)char/ni} = { op => 'tnts'};
   $ops{qr/^(i|get)num/ni} = { op => 'tntt'};
 
-  my $filename = shift or die "Usage $0 <filename>";
+  my $filename = shift or die "Usage $0 <filename>\n";
 
   open(my $ifh, "<", $filename) or die "Cannot open $filename for reading: $!";
 
