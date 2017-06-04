@@ -50,7 +50,7 @@ sub main {
   $ops{qr/^label/i} = { op => "nss", param => 'label' };
   $ops{qr/:$/i} = { op => "nss", param => 'self' };
   $ops{qr/^call/i} = { op => "nst", param => 'label' };
-  $ops{qr/^ju?mp/i} = { op => "nsn", param => 'label' };
+  $ops{qr/^(ju?mp|goto)/i} = { op => "nsn", param => 'label' };
   $ops{qr/^je?z/i} = { op => 'nts', param => 'label' };
   $ops{qr/^j(n|lz)/ni} = { op => 'ntt', param => 'label' };
   $ops{qr/^ret(?!r)/i} = { op => 'ntn'};

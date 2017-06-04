@@ -91,7 +91,7 @@ Heap access commands can be followed by a number to use as the heap address. For
 * `label`: Declares a label.<sup>2</sup>
 * `call`: Call a subroutine, effectively a jump to a label that also marks the current location for a later `ret`.<sup>2</sup>
 * `jmp`: Unconditionally jump to a label.<sup>2</sup>  
-Synonyms: `jump`
+Synonyms: `jump`, `goto`
 * `jez`: Jump to a label if the top stack item is 0.<sup>2</sup>  
 Synonyms: `jz`
 * `jlz`: Jump to a label if the top stack item is negative.<sup>2</sup>  
