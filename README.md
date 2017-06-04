@@ -43,7 +43,8 @@ The following keywords are available. In fact, any tokens that start with a list
 * `push`: Pushes a value to the stack.<sup>1</sup>
 * `dup`: Duplicates the top stack item.
 * `copy`: Copies the *n*th stack item to the top of the stack.<sup>1</sup>
-* `swap`: Swaps the top two stack items.
+* `swap`: Swaps the top two stack items.  
+Synonyms: `swp`
 * `pop`: Removes the top stack item.
 * `slide`: Removes the top *n* stack items, keeping the top item.<sup>1</sup>
 

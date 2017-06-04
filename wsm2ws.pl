@@ -28,7 +28,7 @@ sub main {
   $ops{qr/^push/i} = { op => 'ss', param => 'number' };
   $ops{qr/^dup/i} = { op => 'sns' };
   $ops{qr/^copy/i} = { op => 'sts', param => 'number' };
-  $ops{qr/^swap/i} = { op => 'snt' };
+  $ops{qr/^swa?p/i} = { op => 'snt' };
   $ops{qr/^pop/i} = { op => 'snn' };
   $ops{qr/^slide/i} = { op => 'stn', param => 'number' };
 
