@@ -9,20 +9,43 @@ The Whitespace output will be written to a file in the same directory as the inp
 The program will output a human readable version of the code to STDOUT followed by a tokenised version of the code then the name of the output file. While the tokenised code appends the keywords corresponding to each instruction as provided in the input file the output may differ slightlly when it comes to labels and numbers.
 
 ## Example
-    $ ./wsm2ws.pl test.wsm
-    nssnnsssnsssnssstnnstnnnn
-    nssn  ; label ''
-    nsssn ; label '0'
+    $ cat examples/reverse.wsm
+    push 0 ; initialise stack with 0. state: [0]
+    1: ; input loop
+    dup ichar ; read character from stdin (stored at address n). state: [n] [n:<char>]
+    dup retr ; get character value from heap address n. state: [n, <char>]
+    jez 0; null character read so assume end of input and start output loop. state: [n]
+    add 1 ; increment n. state: [n+1]
+    jmp 1 ; continue input loop
+    0: ; output loop
+    sub 1 ; decrement n. state: [n-1]
+    dup retr ; get character value from heap address n. state: [n, <char>]
+    ochar ; write character to stdout. state: [n]
+    jmp 0 ; continue output loop
+
+    $ ./wsm2ws.pl examples/reverse.wsm
+    sssnnsstnsnstntssnstttntsnssstntsssnsntnnssnssstntsstsnsttttnssnsnn
     sssn  ; push 0
+    nsstn ; 1:
+    sns   ; dup
+    tnts  ; ichar
+    sns   ; dup
+    ttt   ; retr
+    ntsn  ; jez 0
     ssstn ; push 1
-    nstn  ; call ''
-    nnn   ; end
-    See ./test.ws for transpiled source
+    tsss  ; add
+    nsntn ; jmp 1
+    nssn  ; 0:
+    ssstn ; push 1
+    tsst  ; sub
+    sns   ; dup
+    ttt   ; retr
+    tnss  ; ochar
+    nsnn  ; jmp 0
+    See examples/reverse.ws for transpiled source
 
 ## Notes
-As is probably evident from the example this program does not attempt to validate or verify the whitespace code beyond ensuring correct syntax. It is up to the programmer to ensure the code will execute without errors.
-
-Labels with leading spaces (other than the label `\s` - a single space) are currently unusable due to the integer representation expected of labels in wsm code. If I get around to making this an optimising transpiler I hope to process labels so the most frequently used labels get assigned the shortest sequences.
+This program does not attempt to validate or verify the whitespace code beyond ensuring correct syntax. It is up to the programmer to ensure the code will execute without errors. Problems with the example above include a missing end token, no way to leave the output loop, and there's no check to avoid executing retr with a negative heap address.
 
 ## Todo
 See the list of [issues with the [enhancement] label](https://github.com/ephphatha/wsm2ws/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement).
@@ -53,16 +76,16 @@ Synonyms: `swp`
 * `sub`: Subtraction
 * `mul`: Multiplication
 * `div`: Integer Division
-* `mod`: Modulo  
+* `mod`: Modulo/Remainder  
 Synonyms: `rem`
 
-Arithmetic commands can be followed by a number to use as the RHS of the operation. The transpiled source will insert a `push <number>` command before the arithmetic command so sequences like `push 5 sub 3` will be transpiled to `push 5 push 3 sub`.
+Arithmetic commands can be followed by a number to use as the RHS of the operation. A `push <number>` command will be inserted before the arithmetic command in the transpiled output. For example, sequences like `push 5 sub 3` will be transpiled to `push 5 push 3 sub`.
 
 ### Heap Access
 * `stor`: Stores the value of the top stack item at the address given by the next stack item.
 * `retr`: Retrieves the value at the address given by the top stack item and pushes it to the stack.
 
-Heap access commands can be followed by a number to use as the heap address. For `stor` commands the transpiled source will insert a push in the same way that arithmetic commands are handled. `retr` commands are a little more complicated. As the spec uses the top stack value as the value to be stored and the second from the top as the address an additional `swap` command will be inserted between the `push` and the `retr` to maintain consistency with the `stor` syntax.
+Heap access commands can be followed by a number to use as the heap address. For `stor` commands a push will be inserted into the transpiled output as described for arithmetic commands. `retr` commands are a little more complicated. As the spec uses the top stack value as the value to be stored and the second from the top as the address an additional `swap` command will be inserted between the `push` and the `retr` to maintain consistency with the `stor` syntax.
 
 ### Flow Control
 * `label`: Declares a label.<sup>2</sup>
