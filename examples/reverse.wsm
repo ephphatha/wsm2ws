@@ -1,0 +1,13 @@
+; https://codegolf.stackexchange.com/questions/242/reverse-stdin-and-place-on-stdout
+push 0 ;[0]
+input_loop:
+dup ichar ;[n] [n:<char>]
+dup retr ;[n, <char>]
+jez "output_loop" ;[n]
+add 1 ;[n+1]
+jmp "input_loop"
+output_loop:
+sub 1 ;[n-1]
+dup retr ;[n, <char>]
+ochar ;[n]
+jmp "output_loop"
