@@ -33,15 +33,15 @@ sub main {
   $ops{qr/^slide/i} = { op => 'stn', param => 'number' };
 
   # Arithmetic
-  $ops{qr/^add/i} = { op => 'tsss', param => 'number_optional' };
-  $ops{qr/^sub/i} = { op => 'tsst', param => 'number_optional' };
-  $ops{qr/^mul/i} = { op => 'tssn', param => 'number_optional' };
-  $ops{qr/^div/i} = { op => 'tsts', param => 'number_optional' };
-  $ops{qr/^(mod|rem)/ni} = { op => 'tstt', param => 'number_optional' };
+  $ops{qr/^add/i} = { op => 'tsss', param => 'number', optional => 1 };
+  $ops{qr/^sub/i} = { op => 'tsst', param => 'number', optional => 1 };
+  $ops{qr/^mul/i} = { op => 'tssn', param => 'number', optional => 1 };
+  $ops{qr/^div/i} = { op => 'tsts', param => 'number', optional => 1 };
+  $ops{qr/^(mod|rem)/ni} = { op => 'tstt', param => 'number', optional => 1 };
 
   # Heap Access
-  $ops{qr/^stor/i} = { op => 'tts', param => 'number_optional' };
-  $ops{qr/^retr/i} = { op => 'ttt', param => 'number_optional' };
+  $ops{qr/^stor/i} = { op => 'tts' };
+  $ops{qr/^retr/i} = { op => 'ttt', param => 'number', optional => 1 };
 
   # Flow Control
   $ops{qr/^label/i} = { op => "nss", param => 'label' };
@@ -93,48 +93,45 @@ sub main {
       TOKEN: {
         next unless $token->rule->name eq 'KEYWORD';
 
-        my ($op, $param) = @{$ops{$token->data}}{qw(op param)};
+        my $instruction = $ops{$token->data};
 
-        unless ($op) {
+        unless ($instruction) {
           warn "Unrecognised token: ".$token->data;
           next;
         }
 
-        my %instruction = (
-          op => $op,
-          token => $token->data
-        );
+        $instruction = { %$instruction }; # clone so we can modify the opstring
+        $instruction->{token} = $token->data;
 
-        if ($param) {
-          unless ($param eq 'self') {
+        if ($instruction->{param}) {
+          unless ($instruction->{param} eq 'self') {
             do {
               $token = $parser->nextToken;
             } while ($token->rule->name eq 'WHITESPACE');
           }
 
-          given ($param) {
-            when (/^number/) {
+          given ($instruction->{param}) {
+            when ('number') {
               my $isNumberToken = NUMBER_TOKEN_NAMES->{$token->rule->name};
-              my $isOptional = $param =~ /optional$/;
 
-              if ($isOptional && $isNumberToken) {
+              if ($instruction->{optional} && $isNumberToken) {
                 warn "Shorthand instructions have not been implemented!";
                 break;
               }
 
               if ($isNumberToken) {
-                $instruction{op} .= whitespace_encode($token->data, signed => 1);
-                $instruction{token} .= " ".$token->data;
+                $instruction->{op} .= whitespace_encode($token->data, signed => 1);
+                $instruction->{token} .= " ".$token->data;
               } else {
-                unless ($isOptional) {
-                  $instruction{op} .= whitespace_encode('0', signed => 1);
-                  $instruction{token} .= " 0";
+                unless ($instruction->{optional}) {
+                  $instruction->{op} .= whitespace_encode('0', signed => 1);
+                  $instruction->{token} .= " 0";
                 }
               }
 
               unless ($isNumberToken) {
-                warn "Expected a number but found: \"".$token->data."\"" unless $isOptional;
-                push @instructions, \%instruction;
+                warn "Expected a number but found: \"".$token->data."\"" unless $instruction->{optional};
+                push @instructions, $instruction;
                 redo TOKEN;
               }
             }
@@ -143,37 +140,37 @@ sub main {
 
               if ($token->rule->name eq 'LABEL') {
                 warn "Dynamic labels have not been implemented!";
-                $instruction{op} .= whitespace_encode('0');
-                $instruction{token} .= " NULL";
+                $instruction->{op} .= whitespace_encode('0');
+                $instruction->{token} .= " NULL";
                 break;
               }
 
               if ($isLabelToken) {
-                $instruction{op} .= whitespace_encode($token->data);
-                $instruction{token} .= " ".$token->data;
+                $instruction->{op} .= whitespace_encode($token->data);
+                $instruction->{token} .= " ".$token->data;
               } else {
                 # Null label
-                $instruction{op} .= whitespace_encode('0');
-                $instruction{token} .= " NULL";
-                push @instructions, \%instruction;
+                $instruction->{op} .= whitespace_encode('0');
+                $instruction->{token} .= " NULL";
+                push @instructions, $instruction;
                 redo TOKEN;
               }
             }
             when ('self') {
               # Special case for label: syntax
               if ($token->data =~ /(0[bx]?[\da-f]+|\d+):/i) {
-                $instruction{op} .= whitespace_encode($1);
+                $instruction->{op} .= whitespace_encode($1);
               } elsif ($token->data =~ /(.):/) {
-                $instruction{op} .= whitespace_encode("'$1'");
+                $instruction->{op} .= whitespace_encode("'$1'");
               } else {
                 warn "Unrecognised label format";
-                $instruction{op} .= whitespace_encode('0');
+                $instruction->{op} .= whitespace_encode('0');
               }
             }
           }
         }
 
-        push @instructions, \%instruction;
+        push @instructions, $instruction;
       }
     }
   }
