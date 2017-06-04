@@ -55,9 +55,13 @@ The following keywords are available. In fact, any tokens that start with a list
 * `mod`: Modulo  
 Synonyms: `rem`
 
+Arithmetic commands can be followed by a number to use as the RHS of the operation. The transpiled source will insert a `push <number>` command before the arithmetic command so sequences like `push 5 sub 3` will be transpiled to `push 5 push 3 sub`.
+
 ### Heap Access
 * `stor`: Stores the value of the top stack item at the address given by the next stack item.
 * `retr`: Retrieves the value at the address given by the top stack item and pushes it to the stack.
+
+Heap access commands can be followed by a number to use as the heap address. For `stor` commands the transpiled source will insert a push in the same way that arithmetic commands are handled. `retr` commands are a little more complicated. As the spec uses the top stack value as the value to be stored and the second from the top as the address an additional `swap` command will be inserted between the `push` and the `retr` to maintain consistency with the `stor` syntax.
 
 ### Flow Control
 * `label`: Declares a label.<sup>2</sup>

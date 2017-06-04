@@ -40,7 +40,9 @@ sub main {
   $ops{qr/^(mod|rem)/ni} = { op => 'tstt', param => 'number', optional => 1 };
 
   # Heap Access
-  $ops{qr/^stor/i} = { op => 'tts' };
+  # Note: The store command expects value to be at the top of the stack so we need
+  #  to swap after pushing the address.
+  $ops{qr/^stor/i} = { op => 'tts', param => 'number', optional => 1, swap => 1 };
   $ops{qr/^retr/i} = { op => 'ttt', param => 'number', optional => 1 };
 
   # Flow Control
@@ -116,12 +118,22 @@ sub main {
 
               if ($isNumberToken) {
                 if ($instruction->{optional}) {
-                  warn "Shorthand instructions have not been implemented!";
-                  break;
-                }
+                  my %pushOp = %{$ops{'push'}};
+                  $pushOp{op} .= whitespace_encode($token->data, signed => 1);
+                  $pushOp{token} = "push ".$token->data;
 
-                $instruction->{op} .= whitespace_encode($token->data, signed => 1);
-                $instruction->{token} .= " ".$token->data;
+                  push @instructions, \%pushOp;
+
+                  if ($instruction->{swap}) {
+                    my %swapOp = %{$ops{'swap'}};
+                    $swapOp{token} = "swap";
+
+                    push @instructions, \%swapOp;
+                  }
+                } else {
+                  $instruction->{op} .= whitespace_encode($token->data, signed => 1);
+                  $instruction->{token} .= " ".$token->data;
+                }
               } else {
                 unless ($instruction->{optional}) {
                   $instruction->{op} .= whitespace_encode('0', signed => 1);
