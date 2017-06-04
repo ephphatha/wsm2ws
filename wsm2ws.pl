@@ -114,23 +114,21 @@ sub main {
             when ('number') {
               my $isNumberToken = NUMBER_TOKEN_NAMES->{$token->rule->name};
 
-              if ($instruction->{optional} && $isNumberToken) {
-                warn "Shorthand instructions have not been implemented!";
-                break;
-              }
-
               if ($isNumberToken) {
+                if ($instruction->{optional}) {
+                  warn "Shorthand instructions have not been implemented!";
+                  break;
+                }
+
                 $instruction->{op} .= whitespace_encode($token->data, signed => 1);
                 $instruction->{token} .= " ".$token->data;
               } else {
                 unless ($instruction->{optional}) {
                   $instruction->{op} .= whitespace_encode('0', signed => 1);
                   $instruction->{token} .= " 0";
-                }
-              }
 
-              unless ($isNumberToken) {
-                warn "Expected a number but found: \"".$token->data."\"" unless $instruction->{optional};
+                  warn "Expected a number but found: \"".$token->data."\"";
+                }
                 push @instructions, $instruction;
                 redo TOKEN;
               }
