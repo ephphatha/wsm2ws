@@ -57,10 +57,10 @@ sub main {
   $ops{qr/^e(nd|xit)/ni} = { op => 'nnn'};
 
   # I/O
-  $ops{qr/^(o|put)char/ni} = { op => 'tnss'};
-  $ops{qr/^(o|put)num/ni} = { op => 'tnst'};
-  $ops{qr/^(i|get)char/ni} = { op => 'tnts'};
-  $ops{qr/^(i|get)num/ni} = { op => 'tntt'};
+  $ops{qr/^(o|put)char/ni} = { op => 'tnss', param => 'number', optional => 1};
+  $ops{qr/^(o|put)num/ni} = { op => 'tnst', param => 'number', optional => 1};
+  $ops{qr/^(i|get)char/ni} = { op => 'tnts', param => 'number', optional => 1};
+  $ops{qr/^(i|get)num/ni} = { op => 'tntt', param => 'number', optional => 1};
 
   my $filename = shift or die "Usage $0 <filename>\n";
 

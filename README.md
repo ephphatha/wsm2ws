@@ -85,7 +85,7 @@ Arithmetic commands can be followed by a number to use as the RHS of the operati
 * `stor`: Stores the value of the top stack item at the address given by the next stack item.
 * `retr`: Retrieves the value at the address given by the top stack item and pushes it to the stack.
 
-Heap access commands can be followed by a number to use as the heap address. For `stor` commands a push will be inserted into the transpiled output as described for arithmetic commands. `retr` commands are a little more complicated. As the spec uses the top stack value as the value to be stored and the second from the top as the address an additional `swap` command will be inserted between the `push` and the `retr` to maintain consistency with the `stor` syntax.
+Heap access commands can be followed by a number to use as the heap address. For `stor` commands a `push` will be inserted into the transpiled output as described for arithmetic commands. `retr` commands are a little more complicated. As the spec uses the top stack value as the value to be stored and the second from the top as the address an additional `swap` command will be inserted between the `push` and the `retr` to maintain consistency with the `stor` syntax.
 
 ### Flow Control
 * `label`: Declares a label.<sup>2</sup>
@@ -101,7 +101,7 @@ Note: Pattern matching for this command is actually `/^ret(?!r)/` so that `retri
 * `end`: End the program.  
 Synonyms: `exit`
 
-### I/O
+### Input/Output
 * `ochar`: Output the character given by the value of the top stack item.  
 Synonyms: `putchar`
 * `onum`: Output the value of the top stack item.  
@@ -110,6 +110,8 @@ Synonyms: `putnum`
 Synonyms: `getchar`
 * `inum`: Read a number and store it at the address given by the top stack item.  
 Synonyms: `getnum`
+
+I/O commands can be followed by a number to use as the heap address (for input commands) or value (for output commands). In all cases a `push` will be inserted into the transpiled output as described for arithmetic commands.
 
 ### Notes
 1. These commands expect the next token to be a number as described below. If the next token doesn't look like a number a 0 value will be inserted and a warning printed to STDERR.
